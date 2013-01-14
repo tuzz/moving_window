@@ -31,17 +31,20 @@ class MovingWindow
   end
 
   class Proc < ::Proc
+    attr_writer :negate
+
     def initialize(*args)
       @instance, @arel, @column = args
     end
 
     def call
-      @instance.filter(@arel, :column => @column, :negate => @not)
+      @instance.filter(@arel, :column => @column, :negate => @negate)
     end
 
     def not
-      @not = !@not
-      self
+      clone = self.clone
+      clone.negate = !@negate
+      clone
     end
   end
 

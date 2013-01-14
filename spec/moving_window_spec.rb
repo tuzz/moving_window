@@ -14,6 +14,9 @@ describe MovingWindow do
     scope :neg3, MovingWindow.scope(:published_at) { [6.months.ago, 1.day.ago] }.not
     scope :neg4, MovingWindow.scope(:published_at) { [1.day.ago, 6.months.ago] }.not
     scope :neg5, MovingWindow.scope(:published_at) { [6.months.from_now, 1.day.ago] }.not
+
+    scope :positive, w = MovingWindow.scope { 6.months.ago }
+    scope :negative, w.not
   end
 
   before do
@@ -102,6 +105,13 @@ describe MovingWindow do
     filtered = window1.filter(Review.limit(1))
     window2.filter(filtered, :column => :published_at, :negate => true).to_a.
       should == [@new]
+  end
+
+  it 'maintains purity when negating' do
+    Review.positive.to_a.should_not == Review.negative.to_a
+
+    Review.negative.to_sql.should     match /not/
+    Review.positive.to_sql.should_not match /not/
   end
 
 end
