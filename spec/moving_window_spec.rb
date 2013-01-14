@@ -8,6 +8,8 @@ describe MovingWindow do
     scope :scope3, MovingWindow.scope(:published_at) { [6.months.ago, 1.day.ago] }
     scope :scope4, MovingWindow.scope(:published_at) { [1.day.ago, 6.months.ago] }
     scope :scope5, MovingWindow.scope(:published_at) { [6.months.from_now, 1.day.ago] }
+
+    scope :negation, MovingWindow.scope { 6.months.ago }.not
   end
 
   before do
@@ -78,6 +80,10 @@ describe MovingWindow do
 
     filtered = window1.filter(Review.limit(1))
     window2.filter(filtered, :published_at).to_a.should == [@cutting_edge]
+  end
+
+  it 'supports negations' do
+    Review.negation.should == [@ancient, @old, @future]
   end
 
 end

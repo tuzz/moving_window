@@ -4,15 +4,16 @@ class MovingWindow
     arel = block.binding.eval("self")
     instance = new(&block)
 
-    lambda { instance.filter(arel, column) }
+    Procxy.new(instance, arel, column)
   end
 
   def initialize(&block)
     @block = block
   end
 
-  def filter(scope, column = :created_at)
-    scope.where(["#{column} > ? and #{column} < ?", *timestamps])
+  def filter(scope, column = :created_at, negate = false)
+    qualifier = negate ? 'not between' : 'between'
+    scope.where(["#{column} #{qualifier} ? and ?", *timestamps])
   end
 
   private
@@ -20,6 +21,17 @@ class MovingWindow
     from, to = @block.call
     to ||= Time.now
     [from, to].sort
+  end
+
+  class Procxy < Struct.new(:instance, :arel, :column)
+    def call
+      instance.filter(arel, column, @not)
+    end
+
+    def not
+      @not = !@not
+      self
+    end
   end
 
 end
