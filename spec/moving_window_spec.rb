@@ -9,37 +9,36 @@ describe MovingWindow do
     scope :scope4, MovingWindow.scope(:published_at) { [1.day.ago, 6.months.ago] }
     scope :scope5, MovingWindow.scope(:published_at) { [6.months.from_now, 1.day.ago] }
 
-    scope :negation, MovingWindow.scope { 6.months.ago }.not
+    scope :neg1, MovingWindow.scope { 6.months.ago }.not
+    scope :neg2, MovingWindow.scope { [6.months.ago, 1.day.ago] }.not
+    scope :neg3, MovingWindow.scope(:published_at) { [6.months.ago, 1.day.ago] }.not
+    scope :neg4, MovingWindow.scope(:published_at) { [1.day.ago, 6.months.ago] }.not
+    scope :neg5, MovingWindow.scope(:published_at) { [6.months.from_now, 1.day.ago] }.not
   end
 
   before do
     @ancient = Review.create!(
       :created_at   => 20.months.ago,
-      :updated_at   => 18.months.ago,
       :published_at => 15.months.ago
     )
 
     @old = Review.create!(
       :created_at   => 9.months.ago,
-      :updated_at   => 7.months.ago,
       :published_at => 5.months.ago
     )
 
     @new = Review.create!(
       :created_at   => 1.month.ago,
-      :updated_at   => 3.weeks.ago,
       :published_at => 2.weeks.ago
     )
 
     @cutting_edge = Review.create!(
       :created_at   => 10.minutes.ago,
-      :updated_at   => 10.minutes.ago,
       :published_at => 30.seconds.ago
     )
 
     @future = Review.create!(
       :created_at   => 1.hours.from_now,
-      :updated_at   => 2.hours.from_now,
       :published_at => 3.hours.from_now
     )
   end
@@ -69,6 +68,19 @@ describe MovingWindow do
     Review.scope5.should                    == [@old, @new, @cutting_edge]
   end
 
+  it 'supports negations' do
+    Review.neg1.to_a.should == [@ancient, @old, @future]
+    Review.neg2.to_a.should == [@ancient, @old, @cutting_edge, @future]
+    Review.neg3.to_a.should == [@ancient, @cutting_edge, @future]
+    Review.neg4.to_a.should == Review.neg3.to_a
+    Review.neg5.to_a.should == [@ancient, @old, @new]
+
+    Review.neg1.neg3.to_a.should      == [@ancient, @future]
+    Review.neg1.neg5.to_a.should      == [@ancient, @old]
+    Review.neg1.neg2.neg3.to_a.should == [@ancient, @future]
+    Review.neg3.neg5.to_a.should      == [@ancient]
+  end
+
   it 'supports manual invocation' do
     window1 = MovingWindow.new { [2.months.ago, 2.months.from_now] }
     window2 = MovingWindow.new { 45.seconds.ago }
@@ -76,14 +88,20 @@ describe MovingWindow do
     window1.filter(Review).to_a.should == [@new, @cutting_edge, @future]
     window2.filter(Review).to_a.should == []
 
-    window2.filter(Review, :published_at).to_a.should == [@cutting_edge]
+    window2.filter(Review, :column => :published_at).to_a.should == [@cutting_edge]
 
     filtered = window1.filter(Review.limit(1))
-    window2.filter(filtered, :published_at).to_a.should == [@cutting_edge]
-  end
+    window2.filter(filtered, :column => :published_at).to_a.should == [@cutting_edge]
 
-  it 'supports negations' do
-    Review.negation.should == [@ancient, @old, @future]
+    window1.filter(Review, :negate => true).to_a.should == [@ancient, @old]
+    window2.filter(Review, :negate => true).to_a.size.should == 5
+
+    window2.filter(Review, :column => :published_at, :negate => true).to_a.
+      should == [@ancient, @old, @new, @future]
+
+    filtered = window1.filter(Review.limit(1))
+    window2.filter(filtered, :column => :published_at, :negate => true).to_a.
+      should == [@new]
   end
 
 end

@@ -36,13 +36,27 @@ You'll find that `.scope` won't work outside of an active record model. Invoke t
 
 ```ruby
 window = MovingWindow.new { 6.months.ago }
-window.filter(Review, :published_at)
+window.filter(Review, :column => :published_at)
 ```
 
 Arel is fully supported:
 
 ```ruby
 window.filter(Review.published).limit(5)
+```
+
+## Negation
+
+You can find all records that lie outside of the moving window by negating it:
+
+```ruby
+scope :not_recent, MovingWindow.scope { 6.months.ago }.not
+```
+
+If you're calling things manually:
+
+```ruby
+window.filter(Review, :negate => true)
 ```
 
 ## Contribution

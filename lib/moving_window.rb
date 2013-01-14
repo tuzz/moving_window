@@ -11,12 +11,19 @@ class MovingWindow
     @block = block
   end
 
-  def filter(scope, column = :created_at, negate = false)
-    qualifier = negate ? 'not between' : 'between'
+  def filter(scope, params = {})
+    column, qualifier = parse(params)
     scope.where(["#{column} #{qualifier} ? and ?", *timestamps])
   end
 
   private
+  def parse(params)
+    column    = params[:column] || :created_at
+    qualifier = params[:negate] ? 'not between' : 'between'
+
+    [column, qualifier]
+  end
+
   def timestamps
     from, to = @block.call
     to ||= Time.now
@@ -25,7 +32,7 @@ class MovingWindow
 
   class Procxy < Struct.new(:instance, :arel, :column)
     def call
-      instance.filter(arel, column, @not)
+      instance.filter(arel, :column => column, :negate => @not)
     end
 
     def not
