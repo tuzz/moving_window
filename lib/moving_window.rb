@@ -4,7 +4,7 @@ class MovingWindow
     arel = block.binding.eval("self")
     instance = new(&block)
 
-    Procxy.new(instance, arel, column)
+    Proc.new(instance, arel, column)
   end
 
   def initialize(&block)
@@ -30,9 +30,13 @@ class MovingWindow
     [from, to].sort
   end
 
-  class Procxy < Struct.new(:instance, :arel, :column)
+  class Proc < ::Proc
+    def initialize(*args)
+      @instance, @arel, @column = args
+    end
+
     def call
-      instance.filter(arel, :column => column, :negate => @not)
+      @instance.filter(@arel, :column => @column, :negate => @not)
     end
 
     def not
