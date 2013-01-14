@@ -13,7 +13,8 @@ class MovingWindow
 
   def filter(scope, params = {})
     column, qualifier = parse(params)
-    scope.where(["#{column} #{qualifier} ? and ?", *timestamps])
+    t = scope.table_name
+    scope.where(["#{t}.#{column} #{qualifier} ? and ?", *timestamps])
   end
 
   private

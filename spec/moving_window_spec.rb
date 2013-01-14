@@ -2,7 +2,12 @@ require 'spec_helper'
 
 describe MovingWindow do
 
+  class User < ActiveRecord::Base
+  end
+
   class Review < ActiveRecord::Base
+    belongs_to :user
+
     scope :scope1, MovingWindow.scope { 6.months.ago }
     scope :scope2, MovingWindow.scope { [6.months.ago, 1.day.ago] }
     scope :scope3, MovingWindow.scope(:published_at) { [6.months.ago, 1.day.ago] }
@@ -112,6 +117,12 @@ describe MovingWindow do
 
     Review.negative.to_sql.should     match /not/
     Review.positive.to_sql.should_not match /not/
+  end
+
+  it 'is explicit about table name when joining' do
+    expect {
+      Review.scope1.joins(:user).to_a
+    }.to_not raise_error
   end
 
 end
