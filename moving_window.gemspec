@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'moving_window'
-  s.version     = '1.0.0'
+  s.version     = '2.0.0'
   s.summary     = 'Moving Window'
   s.description = 'A helper for building scopes that deal with moving windows.'
   s.author      = 'Chris Patuzzo'
