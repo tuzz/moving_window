@@ -13,12 +13,14 @@ describe MovingWindow do
     scope :scope3, MovingWindow.scope(:published_at) { [6.months.ago, 1.day.ago] }
     scope :scope4, MovingWindow.scope(:published_at) { [1.day.ago, 6.months.ago] }
     scope :scope5, MovingWindow.scope(:published_at) { [6.months.from_now, 1.day.ago] }
+    scope :scope6, MovingWindow.scope([:published_at, :created_at]) { [21.months.ago, 19.months.ago] }
 
     scope :neg1, MovingWindow.scope { 6.months.ago }.not
     scope :neg2, MovingWindow.scope { [6.months.ago, 1.day.ago] }.not
     scope :neg3, MovingWindow.scope(:published_at) { [6.months.ago, 1.day.ago] }.not
     scope :neg4, MovingWindow.scope(:published_at) { [1.day.ago, 6.months.ago] }.not
     scope :neg5, MovingWindow.scope(:published_at) { [6.months.from_now, 1.day.ago] }.not
+    scope :neg6, MovingWindow.scope([:published_at, :created_at]) { [21.months.ago, 19.months.ago] }.not
 
     scope :positive, w = MovingWindow.scope { 6.months.ago }
     scope :negative, w.not
@@ -123,6 +125,26 @@ describe MovingWindow do
     expect {
       Review.scope1.joins(:user).to_a
     }.to_not raise_error
+  end
+
+  context 'multiple columns' do
+    it 'uses the column with the value present without negate' do
+      @not_published = Review.create!(
+        :created_at   => 20.months.ago,
+        :published_at => nil
+      )
+
+      expect(Review.scope6.to_a).to eq([@not_published])
+    end
+
+    it 'uses the column with the value present with negate option' do
+      @not_published = Review.create!(
+        :created_at   => 20.months.ago,
+        :published_at => nil
+      )
+
+      expect(Review.neg6.to_a).to contain_exactly(@ancient, @old, @cutting_edge, @future, @new)
+    end
   end
 
 end
