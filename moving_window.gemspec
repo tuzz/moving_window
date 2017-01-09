@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'moving_window'
-  s.version     = '2.0.4'
+  s.version     = '2.0.5'
   s.summary     = 'Moving Window'
   s.description = 'A helper for building scopes that deal with moving windows.'
   s.author      = 'Chris Patuzzo'
@@ -9,6 +9,6 @@ Gem::Specification.new do |s|
   s.files       = ['README.md'] + Dir['lib/**/*.*']
 
   s.add_development_dependency 'rspec'
-  s.add_development_dependency 'activerecord'
+  s.add_development_dependency 'activerecord', '3.2.22'
   s.add_development_dependency 'sqlite3'
 end
