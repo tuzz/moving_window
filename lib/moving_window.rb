@@ -13,8 +13,8 @@ class MovingWindow
 
   def filter(scope, params = {})
     column, qualifier = parse(params)
-    t = scope.table_name
-    scope.where(["#{t}.#{column} #{qualifier} ? and ?", *timestamps])
+    query = columns_sql(scope.table_name, Array.wrap(column))
+    scope.where(["#{query} #{qualifier} ? and ?", *timestamps])
   end
 
   private
@@ -29,6 +29,11 @@ class MovingWindow
     from, to = @block.call
     to ||= Time.now
     [from, to].sort
+  end
+
+  def columns_sql(table_name, columns)
+    columns_string = columns.map { |name| "#{table_name}.#{name}" }.join(',')
+    columns.length > 1 ? "COALESCE(#{columns_string})" : columns_string
   end
 
   class Proc < ::Proc
