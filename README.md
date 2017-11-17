@@ -58,9 +58,3 @@ If you're calling things manually:
 ```ruby
 window.filter(Review, :negate => true)
 ```
-
-## Contribution
-
-Feel free to contribute. No commit is too small.
-
-You should follow me: [@cpatuzzo](https://twitter.com/cpatuzzo)
